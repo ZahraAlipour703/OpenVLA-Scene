@@ -1,0 +1,21 @@
+project:
+
+  name: OpenVLA-Scene
+
+  version: 0.1
+
+device:
+
+  cuda: true
+
+logging:
+
+  level: INFO
+
+visualization:
+
+  show_fps: true
+
+detector:
+
+  name: grounding_dino
