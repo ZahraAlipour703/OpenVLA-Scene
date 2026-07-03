@@ -1,14 +1,19 @@
 from pathlib import Path
+import yaml
 
-from omegaconf import OmegaConf
 
+class Config:
 
-def load_config(path: str):
+    def __init__(self, path):
 
-    path = Path(path)
+        with open(path, "r") as f:
 
-    if not path.exists():
+            self.cfg = yaml.safe_load(f)
 
-        raise FileNotFoundError(path)
+    def __getitem__(self, key):
 
-    return OmegaConf.load(path)
+        return self.cfg[key]
+
+    def get(self, key, default=None):
+
+        return self.cfg.get(key, default)

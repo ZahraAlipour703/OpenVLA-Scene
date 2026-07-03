@@ -1,21 +1,19 @@
-project:
+device: cuda
 
-  name: OpenVLA-Scene
+confidence: 0.35
 
-  version: 0.1
+box_threshold: 0.35
 
-device:
+text_threshold: 0.25
 
-  cuda: true
+tracking:
 
-logging:
+  max_age: 30
 
-  level: INFO
+  min_hits: 3
 
-visualization:
+output:
 
-  show_fps: true
+  save: true
 
-detector:
-
-  name: grounding_dino
+  folder: outputs
