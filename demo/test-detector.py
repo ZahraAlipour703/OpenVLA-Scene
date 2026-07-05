@@ -1,84 +1,96 @@
-from transformers import pipeline
-from PIL import Image, ImageDraw
-import matplotlib.pyplot as plt
+import sys
+from pathlib import Path
 
-# -----------------------------
+ROOT = Path(__file__).resolve().parents[1]
+SRC = ROOT / "src"
+
+sys.path.insert(0, str(SRC))
+from PIL import Image, ImageDraw
+
+from openvla_scene.pipeline.pipeline import PerceptionPipeline
+
+# --------------------------------------------------
 # Load image
-# -----------------------------
+# --------------------------------------------------
+
 image_path = r"D:\zra\PROJECTS\Github\OpenVLA-Scene\demo\CARDS_COURTYARD_B_T_frame_0113.jpg"
+
 image = Image.open(image_path).convert("RGB")
 
-# -----------------------------
-# Load OWLv2 detector
-# -----------------------------
-detector = pipeline(
-    task="zero-shot-object-detection",
-    model="google/owlv2-base-patch16-ensemble"
-)
+# --------------------------------------------------
+# Object categories
+# --------------------------------------------------
 
-# -----------------------------
-# Language queries
-# -----------------------------
-candidate_labels = [
+labels = [
     "person",
     "cup",
     "bottle",
     "keyboard",
-    "monitor"
+    "monitor",
 ]
 
-# -----------------------------
-# Detect
-# -----------------------------
-outputs = detector(
-    image,
-    candidate_labels=candidate_labels
+# --------------------------------------------------
+# Run perception pipeline
+# --------------------------------------------------
+
+pipeline = PerceptionPipeline()
+
+scene = pipeline.run(
+    image=image,
+    labels=labels,
 )
 
-# -----------------------------
+# --------------------------------------------------
 # Draw detections
-# -----------------------------
-draw = ImageDraw.Draw(image)
+# --------------------------------------------------
+
+draw = ImageDraw.Draw(scene.image)
 
 CONFIDENCE = 0.30
 
-for obj in outputs:
+for det in scene.detections:
 
-    score = obj["score"]
-
-    if score < CONFIDENCE:
+    if det.score < CONFIDENCE:
         continue
 
-    box = obj["box"]
-
-    xmin = box["xmin"]
-    ymin = box["ymin"]
-    xmax = box["xmax"]
-    ymax = box["ymax"]
-
-    label = f'{obj["label"]}: {score:.2f}'
+    xmin, ymin, xmax, ymax = det.bbox
 
     draw.rectangle(
         [(xmin, ymin), (xmax, ymax)],
         outline="red",
-        width=3
+        width=3,
     )
 
     draw.text(
-        (xmin, max(0, ymin-20)),
-        label,
-        fill="red"
+        (xmin, max(0, ymin - 20)),
+        f"{det.label}: {det.score:.2f}",
+        fill="red",
     )
 
-# -----------------------------
-# Save
-# -----------------------------
+# --------------------------------------------------
+# Save result
+# --------------------------------------------------
+
 output_path = "output.jpg"
-image.save(output_path)
 
-print(f"Saved visualization to {output_path}")
+scene.image.save(output_path)
 
-# -----------------------------
-# Show
-# -----------------------------
-print("Done! Check putput.jpg")
+print(f"\nSaved visualization to {output_path}\n")
+
+# --------------------------------------------------
+# Print detections
+# --------------------------------------------------
+
+print("=" * 70)
+print("Detections")
+print("=" * 70)
+
+for det in scene.detections:
+
+    print(
+        f"{det.label:<15}"
+        f"{det.score:.2f}    "
+        f"{det.bbox}"
+    )
+
+print("=" * 70)

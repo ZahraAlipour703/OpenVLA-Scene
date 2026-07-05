@@ -2,21 +2,22 @@ from dataclasses import dataclass, field
 from typing import List
 from PIL import Image
 
-
-@dataclass
-class Detection:
-    label: str
-    score: float
-    box: tuple
+from openvla_scene.detector.detection import Detection
 
 
 @dataclass
 class Scene:
+
     image: Image.Image
+
     detections: List[Detection] = field(default_factory=list)
 
-    def add_detection(self, detection: Detection):
-        self.detections.append(detection)
+    masks: list = field(default_factory=list)
 
-    def get_objects(self):
-        return self.detections
+    tracks: list = field(default_factory=list)
+
+    depth = None
+
+    point_cloud = None
+
+    graph = None
