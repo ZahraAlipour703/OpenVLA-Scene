@@ -5,5 +5,6 @@ class Detector(ABC):
 
     @abstractmethod
     def detect(self, image, prompt):
-
-        pass
+        label: str
+        score: float
+        box: tuple
