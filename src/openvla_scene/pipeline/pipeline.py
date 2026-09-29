@@ -4,6 +4,7 @@ from openvla_scene.scene_graph.scene import Scene
 from openvla_scene.detector.grounding_dino import GroundingDINODetector
 from openvla_scene.segmenter.sam import SAMSegmenter
 from openvla_scene.tracker.bytetrack import ByteTracker
+from openvla_scene.depth.depth_anything import DepthAnything
 
 
 class PerceptionPipeline:
@@ -12,6 +13,7 @@ class PerceptionPipeline:
         self.detector = GroundingDINODetector()
         self.segmenter = SAMSegmenter()
         self.tracker = ByteTracker()
+        self.depth_estimator = DepthAnything()
 
     def run(
         self,
@@ -25,10 +27,19 @@ class PerceptionPipeline:
         scene.detections = self.detector.detect(image=image, labels=labels)
 
         # 2. Segment
-        scene.detections = self.segmenter.segment(image=image, detections=scene.detections)
+        scene.detections = self.segmenter.segment(
+            image=image, detections=scene.detections
+        )
 
         # 3. Track
         scene.detections = self.tracker.update(scene.detections)
+
+        # 4. Depth
+        depth_map = self.depth_estimator.estimate(image)
+        scene.depth = depth_map
+        scene.detections = self.depth_estimator.assign_to_detections(
+            depth_map, scene.detections
+        )
 
         scene.masks = [d.mask for d in scene.detections if d.mask is not None]
         scene.tracks = [d.track_id for d in scene.detections if d.track_id is not None]
